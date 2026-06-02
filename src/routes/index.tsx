@@ -962,7 +962,10 @@ function GameView({
     setDrawn([]);
     setWinner(null);
     clearStopSignal();
+    clearPauseSignal();
+    clearRestartSignal();
     const stopBaseline = getStopSignal();
+    const restartBaseline = getRestartSignal();
     // Pre-call sounds must finish before the first bingo number is called.
     await playIntroSound();
     await playStartSound();
