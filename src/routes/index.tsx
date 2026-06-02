@@ -1123,7 +1123,7 @@ function GameView({
                     ብር {s}
                   </span>
                 </div>
-                <span className="text-foreground text-xs sm:text-sm">{pool} Br</span>
+                <span className="text-foreground text-xs sm:text-sm">{pool} ETB</span>
                 <span className="text-foreground text-xs sm:text-sm flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {stakeCount}
