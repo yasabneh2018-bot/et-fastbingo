@@ -1392,6 +1392,10 @@ function GameView({
             ))}
           </div>
         </div>
+      ) : spectator ? (
+        <div className="bg-card border rounded-lg p-6 text-center text-sm text-muted-foreground">
+          You are watching this room. The next draw will appear here live.
+        </div>
       ) : (
         <>
           {/* Stats sidebar + Cartella */}
