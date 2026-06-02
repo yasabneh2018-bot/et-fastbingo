@@ -1187,6 +1187,50 @@ function GameView({
         </div>
       )}
 
+      {/* Spectator / Cancel-Bet bar */}
+      {(spectator || (stakeChosen && !status.drawing)) && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-500/15 via-fuchsia-500/10 to-transparent border border-violet-500/30">
+          {spectator ? (
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <span className="inline-flex w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold text-violet-200">Spectator mode</span>
+              <span className="text-muted-foreground">· no balance deducted</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <span className="font-bold text-primary">Joined</span>
+              <span className="text-muted-foreground">· {bet} ETB locked in</span>
+            </div>
+          )}
+          <button
+            onClick={() => {
+              if (spectator) {
+                setSpectator(false);
+                removePresence(user.username);
+                toast.message("Left room");
+                return;
+              }
+              // Refund the bet and exit the round (only allowed before drawing)
+              if (status.drawing) { setErr("Cannot cancel — drawing started"); return; }
+              const u = getCurrentUser();
+              if (u) updateUser({ ...u, balance: u.balance + bet, games: Math.max(0, (u.games ?? 1) - 1) });
+              setStakeChosen(false);
+              setLocked(false);
+              setCartellaId(null);
+              setCartella(Array(25).fill(0));
+              lockedTicketRef.current = null;
+              removePresence(user.username);
+              toast.success(`Refunded ${bet} ETB`);
+              logActivity({ username: user.username, type: "play", detail: `cancelled ${bet} ETB · refunded` });
+              onChange();
+            }}
+            className="px-3 py-1.5 rounded-md bg-card border border-border text-xs font-bold hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition"
+          >
+            {spectator ? "Leave Room" : "Cancel & Refund"}
+          </button>
+        </div>
+      )}
+
       {/* HUD STAT BAR */}
       {(() => {
         const liveBetTotal = players.reduce((s, p) => s + p.bet, 0) + (spectator ? 0 : bet);
