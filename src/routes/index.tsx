@@ -49,6 +49,14 @@ import {
   getStopSignal,
   raiseStopSignal,
   clearStopSignal,
+  getPauseSignal,
+  raisePauseSignal,
+  clearPauseSignal,
+  getResumeSignal,
+  raiseResumeSignal,
+  getRestartSignal,
+  raiseRestartSignal,
+  clearRestartSignal,
   logActivity,
   getActivities,
   SPEED_MIN,
@@ -753,7 +761,8 @@ function GameView({
   };
   const onCartDragUp = () => { cartDragRef.current = null; };
   const MIN_BET = 10;
-  const HOUSE_CUT = 0.2; // 20% house edge
+  const HOUSE_CUT = 0.2; // 20% house edge (legacy)
+  const POOL_PERCENT = 0.35; // Live prize pool = 35% of total live bet amount
   const [bet, setBet] = useState(MIN_BET);
   const [drawn, setDrawn] = useState<number[]>([]);
   const [currentBall, setCurrentBall] = useState<number | null>(null);
@@ -769,9 +778,10 @@ function GameView({
   // before the cartella picker / game UI appears.
   const STAKES = [10, 20, 50, 100] as const;
   const [stakeChosen, setStakeChosen] = useState(false);
+  const [spectator, setSpectator] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   // Reset stake when a new game round starts
-  useEffect(() => { setStakeChosen(false); }, [status.gameNo]);
+  useEffect(() => { setStakeChosen(false); setSpectator(false); }, [status.gameNo]);
   const pickStake = (amount: number) => {
     if (status.drawing) { setErr("Game already started"); return; }
     const fresh = getCurrentUser();
@@ -952,7 +962,10 @@ function GameView({
     setDrawn([]);
     setWinner(null);
     clearStopSignal();
+    clearPauseSignal();
+    clearRestartSignal();
     const stopBaseline = getStopSignal();
+    const restartBaseline = getRestartSignal();
     // Pre-call sounds must finish before the first bingo number is called.
     await playIntroSound();
     await playStartSound();
@@ -968,9 +981,23 @@ function GameView({
     const chosen = cands[winnerIdx];
 
     const calledSoFar: number[] = [];
+    let pauseBaseline = getPauseSignal();
+    let restarted = false;
     for (let i = 0; i < order.length; i++) {
       // Honor admin "Stop Calling" signal between balls.
       if (getStopSignal() > stopBaseline) break;
+      if (getRestartSignal() > restartBaseline) { restarted = true; break; }
+      // Honor admin "Pause" — block until Continue or Stop/Restart.
+      if (getPauseSignal() > pauseBaseline) {
+        while (true) {
+          await new Promise((r) => setTimeout(r, 250));
+          if (getStopSignal() > stopBaseline) break;
+          if (getRestartSignal() > restartBaseline) { restarted = true; break; }
+          if (getResumeSignal() > pauseBaseline) { pauseBaseline = getPauseSignal(); break; }
+        }
+        if (getStopSignal() > stopBaseline) break;
+        if (restarted) break;
+      }
       const n = order[i];
       setCurrentBall(n);
       setBallKey((k) => k + 1);
@@ -991,13 +1018,34 @@ function GameView({
 
     const finalDrawn = calledSoFar.slice();
 
+    if (restarted) {
+      // Admin restarted mid-draw: refund the user's stake and start a fresh round.
+      if (ticket) {
+        const u3 = getCurrentUser();
+        if (u3) updateUser({ ...u3, balance: u3.balance + ticket.bet });
+        toast.message(`Round restarted · refunded ${ticket.bet} ETB`);
+      }
+      setCurrentBall(null);
+      setDrawn([]);
+      setDaubedManual(new Set([12]));
+      setCartella(Array(25).fill(0));
+      setCartellaId(null);
+      lockedTicketRef.current = null;
+      setLocked(false);
+      setStakeChosen(false);
+      setStatus((s) => ({ countdown: 25, drawing: false, drawnCount: 0, gameNo: s.gameNo + 1 }));
+      runningRef.current = false;
+      onChange();
+      return;
+    }
+
     if (ticket) {
       const userDaubed = daubedSet(ticket.cartella, finalDrawn);
       const userWon = checkWin(pattern, userDaubed);
       // Real bingo prize: total pool from all players × bet, minus house cut.
       // Winner takes the entire net pool.
       const totalPool = players.reduce((s, p) => s + p.bet, 0) + ticket.bet;
-      const netPool = Math.floor(totalPool * (1 - HOUSE_CUT));
+      const netPool = Math.floor(totalPool * POOL_PERCENT);
       const payout = userWon ? netPool : 0;
       const u2 = getCurrentUser();
       if (u2) {
@@ -1088,7 +1136,7 @@ function GameView({
   };
 
   // ---- Stake selection lobby (forced before entering the game) ----
-  if (!stakeChosen) {
+  if (!stakeChosen && !spectator) {
     const stakeColor = (s: number) =>
       s === 10 ? "from-cyan-400 to-cyan-600"
       : s === 20 ? "from-amber-400 to-orange-500"
@@ -1105,7 +1153,8 @@ function GameView({
               (p) => p.joined && p.stake === s && p.gameNo === status.gameNo,
             ).length;
             const isActive = bet === s && stakeCount > 0;
-            const pool = Math.floor(stakeCount * s * (1 - HOUSE_CUT));
+            const liveBet = stakeCount * s;
+            const pool = Math.floor(liveBet * POOL_PERCENT);
             return (
               <div key={s} className="grid grid-cols-[70px_50px_50px_1fr_65px] sm:grid-cols-[110px_70px_70px_1fr_90px] items-center px-2 sm:px-3 py-1.5 sm:py-2 border-b border-border last:border-b-0">
                 <div>
@@ -1113,7 +1162,7 @@ function GameView({
                     ብር {s}
                   </span>
                 </div>
-                <span className="text-foreground text-xs sm:text-sm">{pool} Br</span>
+                <span className="text-foreground text-xs sm:text-sm">{pool} ETB</span>
                 <span className="text-foreground text-xs sm:text-sm flex items-center gap-1">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {stakeCount}
@@ -1133,10 +1182,19 @@ function GameView({
             );
           })}
         </div>
-        <div className="flex justify-center">
+        <div className="flex flex-col sm:flex-row gap-2 justify-center items-stretch">
+          <button
+            onClick={() => { setSpectator(true); toast.message("Watching as spectator · no balance deducted"); }}
+            className="group relative overflow-hidden px-5 py-3 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
+            <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition" />
+            <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+            <span className="relative">Enter Room · Watch Only</span>
+            <span className="relative text-[10px] opacity-80 px-1.5 py-0.5 rounded bg-white/15 border border-white/20">FREE</span>
+          </button>
           <button
             onClick={() => setShowInfo(true)}
-            className="px-4 py-2 rounded-lg bg-card border border-border text-sm text-foreground flex items-center gap-2 hover:bg-accent transition"
+            className="px-4 py-2 rounded-xl bg-card border border-border text-sm text-foreground flex items-center justify-center gap-2 hover:bg-accent transition"
           >
             <span>ℹ️</span><span className="font-semibold">Game Information</span>
           </button>
@@ -1167,9 +1225,54 @@ function GameView({
         </div>
       )}
 
+      {/* Spectator / Cancel-Bet bar */}
+      {(spectator || (stakeChosen && !status.drawing)) && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-500/15 via-fuchsia-500/10 to-transparent border border-violet-500/30">
+          {spectator ? (
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <span className="inline-flex w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold text-violet-200">Spectator mode</span>
+              <span className="text-muted-foreground">· no balance deducted</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <span className="font-bold text-primary">Joined</span>
+              <span className="text-muted-foreground">· {bet} ETB locked in</span>
+            </div>
+          )}
+          <button
+            onClick={() => {
+              if (spectator) {
+                setSpectator(false);
+                removePresence(user.username);
+                toast.message("Left room");
+                return;
+              }
+              // Refund the bet and exit the round (only allowed before drawing)
+              if (status.drawing) { setErr("Cannot cancel — drawing started"); return; }
+              const u = getCurrentUser();
+              if (u) updateUser({ ...u, balance: u.balance + bet, games: Math.max(0, (u.games ?? 1) - 1) });
+              setStakeChosen(false);
+              setLocked(false);
+              setCartellaId(null);
+              setCartella(Array(25).fill(0));
+              lockedTicketRef.current = null;
+              removePresence(user.username);
+              toast.success(`Refunded ${bet} ETB`);
+              logActivity({ username: user.username, type: "play", detail: `cancelled ${bet} ETB · refunded` });
+              onChange();
+            }}
+            className="px-3 py-1.5 rounded-md bg-card border border-border text-xs font-bold hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition"
+          >
+            {spectator ? "Leave Room" : "Cancel & Refund"}
+          </button>
+        </div>
+      )}
+
       {/* HUD STAT BAR */}
       {(() => {
-        const pool = Math.floor((players.reduce((s, p) => s + p.bet, 0) + bet) * (1 - HOUSE_CUT));
+        const liveBetTotal = players.reduce((s, p) => s + p.bet, 0) + (spectator ? 0 : bet);
+        const pool = Math.floor(liveBetTotal * POOL_PERCENT);
         const locked = lockedTicketRef.current;
         const lockedDaubed = locked ? daubedSet(locked.cartella, drawn).size + 1 /* free */ : 0;
         const patternTarget = (() => {
@@ -1326,6 +1429,10 @@ function GameView({
               <div key={`${n}-${i}`} className="keno-ball w-7 h-7 text-[11px]" style={ballStyle(n)}>{n}</div>
             ))}
           </div>
+        </div>
+      ) : spectator ? (
+        <div className="bg-card border rounded-lg p-6 text-center text-sm text-muted-foreground">
+          You are watching this room. The next draw will appear here live.
         </div>
       ) : (
         <>
@@ -2192,12 +2299,34 @@ function AdminView({ t, onChange, user }: { t: (k: Key) => string; onChange: () 
         <div className="text-sm font-bold text-primary flex items-center gap-2">
           <Gauge size={14} /> Calling Controls
         </div>
-        <button
-          onClick={() => { raiseStopSignal(); toast.success("Stop signal sent"); }}
-          className="w-full bg-destructive text-destructive-foreground font-bold py-2 rounded-md flex items-center justify-center gap-2"
-        >
-          <Square size={14} /> Stop Calling Now
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { raisePauseSignal(); toast.message("Paused"); }}
+            className="bg-amber-500 text-black font-bold py-2 rounded-md flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <Square size={14} /> Pause
+          </button>
+          <button
+            onClick={() => { raiseResumeSignal(); toast.success("Continued"); }}
+            className="bg-emerald-500 text-black font-bold py-2 rounded-md flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <Play size={14} /> Continue
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { raiseRestartSignal(); toast.message("Restart signal sent"); }}
+            className="bg-sky-500 text-black font-bold py-2 rounded-md flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <HistoryIcon size={14} /> Restart
+          </button>
+          <button
+            onClick={() => { raiseStopSignal(); toast.success("Stop signal sent"); }}
+            className="bg-destructive text-destructive-foreground font-bold py-2 rounded-md flex items-center justify-center gap-2"
+          >
+            <Square size={14} /> Stop
+          </button>
+        </div>
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-muted-foreground">
             <span>Calling speed (delay between balls)</span>
