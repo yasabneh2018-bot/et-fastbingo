@@ -834,12 +834,12 @@ function GameView({
     const beat = () =>
       heartbeatPresence({
         username: user.username,
-        stake: stakeChosen ? bet : 0,
+        stake: bet,
         joined: stakeChosen,
         gameNo: status.gameNo,
       });
     beat();
-    const id = window.setInterval(beat, 3000);
+    const id = window.setInterval(beat, 1500);
     const onLeave = () => removePresence(user.username);
     window.addEventListener("beforeunload", onLeave);
     return () => {
@@ -2384,7 +2384,7 @@ function AdminLivePlayers({ t }: { t: (k: Key) => string }) {
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           {t("livePlayers")} ({sorted.length})
         </div>
-        <div className="text-[10px] text-muted-foreground">live · updates every 2s</div>
+        <div className="text-[10px] text-muted-foreground">live · updates every 1s</div>
       </div>
       {byStake.length > 0 && (
         <div className="flex flex-wrap gap-1">
@@ -2399,13 +2399,16 @@ function AdminLivePlayers({ t }: { t: (k: Key) => string }) {
         {sorted.map((p) => {
           const age = Math.max(0, Math.floor((Date.now() - p.at) / 1000));
           return (
-            <div key={p.username} className="grid grid-cols-[1fr_70px_60px_50px] gap-1 text-[11px] bg-secondary/30 rounded px-2 py-1.5 items-center">
+            <div key={p.username} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 text-[11px] bg-secondary/30 rounded px-2 py-1.5 items-center">
               <span className="font-bold truncate">{p.username}</span>
-              <span className={p.joined ? "text-primary" : "text-muted-foreground"}>
-                {p.joined ? `ብር ${p.stake}` : "lobby"}
+              <span className={`tabular-nums font-semibold ${p.joined ? "text-primary" : "text-muted-foreground"}`}>
+                ብር {p.stake}
+                <span className="ml-1 text-[9px] font-normal uppercase tracking-wide opacity-70">
+                  {p.joined ? "in" : "lobby"}
+                </span>
               </span>
-              <span className="text-muted-foreground">G#{p.gameNo}</span>
-              <span className="text-[9px] text-muted-foreground text-right">{age}s</span>
+              <span className="text-muted-foreground tabular-nums">G#{p.gameNo}</span>
+              <span className="text-[9px] text-muted-foreground text-right tabular-nums w-8">{age}s</span>
             </div>
           );
         })}
