@@ -233,6 +233,23 @@ export function clearStopSignal() {
   if (typeof window !== "undefined") localStorage.removeItem(STOP_KEY);
 }
 
+// ---- Pause / Resume / Restart signals (admin-pushed, game-consumed) ----
+const PAUSE_KEY = "fk_pause_signal";
+const RESUME_KEY = "fk_resume_signal";
+const RESTART_KEY = "fk_restart_signal";
+export function getPauseSignal(): number { return read<number>(PAUSE_KEY, 0); }
+export function raisePauseSignal() { write(PAUSE_KEY, Date.now()); }
+export function clearPauseSignal() {
+  if (typeof window !== "undefined") localStorage.removeItem(PAUSE_KEY);
+}
+export function getResumeSignal(): number { return read<number>(RESUME_KEY, 0); }
+export function raiseResumeSignal() { write(RESUME_KEY, Date.now()); }
+export function getRestartSignal(): number { return read<number>(RESTART_KEY, 0); }
+export function raiseRestartSignal() { write(RESTART_KEY, Date.now()); }
+export function clearRestartSignal() {
+  if (typeof window !== "undefined") localStorage.removeItem(RESTART_KEY);
+}
+
 // ---- Admin activity log ----
 export type Activity = {
   id: string;
