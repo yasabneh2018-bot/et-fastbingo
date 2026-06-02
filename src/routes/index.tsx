@@ -761,7 +761,8 @@ function GameView({
   };
   const onCartDragUp = () => { cartDragRef.current = null; };
   const MIN_BET = 10;
-  const HOUSE_CUT = 0.2; // 20% house edge
+  const HOUSE_CUT = 0.2; // 20% house edge (legacy)
+  const POOL_PERCENT = 0.35; // Live prize pool = 35% of total live bet amount
   const [bet, setBet] = useState(MIN_BET);
   const [drawn, setDrawn] = useState<number[]>([]);
   const [currentBall, setCurrentBall] = useState<number | null>(null);
