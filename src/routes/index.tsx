@@ -1179,7 +1179,8 @@ function GameView({
 
       {/* HUD STAT BAR */}
       {(() => {
-        const pool = Math.floor((players.reduce((s, p) => s + p.bet, 0) + bet) * (1 - HOUSE_CUT));
+        const liveBetTotal = players.reduce((s, p) => s + p.bet, 0) + (spectator ? 0 : bet);
+        const pool = Math.floor(liveBetTotal * POOL_PERCENT);
         const locked = lockedTicketRef.current;
         const lockedDaubed = locked ? daubedSet(locked.cartella, drawn).size + 1 /* free */ : 0;
         const patternTarget = (() => {
