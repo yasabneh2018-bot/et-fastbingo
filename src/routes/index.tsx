@@ -1114,7 +1114,8 @@ function GameView({
               (p) => p.joined && p.stake === s && p.gameNo === status.gameNo,
             ).length;
             const isActive = bet === s && stakeCount > 0;
-            const pool = Math.floor(stakeCount * s * (1 - HOUSE_CUT));
+            const liveBet = stakeCount * s;
+            const pool = Math.floor(liveBet * POOL_PERCENT);
             return (
               <div key={s} className="grid grid-cols-[70px_50px_50px_1fr_65px] sm:grid-cols-[110px_70px_70px_1fr_90px] items-center px-2 sm:px-3 py-1.5 sm:py-2 border-b border-border last:border-b-0">
                 <div>
