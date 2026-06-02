@@ -2299,12 +2299,34 @@ function AdminView({ t, onChange, user }: { t: (k: Key) => string; onChange: () 
         <div className="text-sm font-bold text-primary flex items-center gap-2">
           <Gauge size={14} /> Calling Controls
         </div>
-        <button
-          onClick={() => { raiseStopSignal(); toast.success("Stop signal sent"); }}
-          className="w-full bg-destructive text-destructive-foreground font-bold py-2 rounded-md flex items-center justify-center gap-2"
-        >
-          <Square size={14} /> Stop Calling Now
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { raisePauseSignal(); toast.message("Paused"); }}
+            className="bg-amber-500 text-black font-bold py-2 rounded-md flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <Square size={14} /> Pause
+          </button>
+          <button
+            onClick={() => { raiseResumeSignal(); toast.success("Continued"); }}
+            className="bg-emerald-500 text-black font-bold py-2 rounded-md flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <Play size={14} /> Continue
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { raiseRestartSignal(); toast.message("Restart signal sent"); }}
+            className="bg-sky-500 text-black font-bold py-2 rounded-md flex items-center justify-center gap-2 hover:brightness-110"
+          >
+            <HistoryIcon size={14} /> Restart
+          </button>
+          <button
+            onClick={() => { raiseStopSignal(); toast.success("Stop signal sent"); }}
+            className="bg-destructive text-destructive-foreground font-bold py-2 rounded-md flex items-center justify-center gap-2"
+          >
+            <Square size={14} /> Stop
+          </button>
+        </div>
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-muted-foreground">
             <span>Calling speed (delay between balls)</span>
