@@ -778,9 +778,10 @@ function GameView({
   // before the cartella picker / game UI appears.
   const STAKES = [10, 20, 50, 100] as const;
   const [stakeChosen, setStakeChosen] = useState(false);
+  const [spectator, setSpectator] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   // Reset stake when a new game round starts
-  useEffect(() => { setStakeChosen(false); }, [status.gameNo]);
+  useEffect(() => { setStakeChosen(false); setSpectator(false); }, [status.gameNo]);
   const pickStake = (amount: number) => {
     if (status.drawing) { setErr("Game already started"); return; }
     const fresh = getCurrentUser();
