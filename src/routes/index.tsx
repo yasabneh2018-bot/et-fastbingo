@@ -981,9 +981,23 @@ function GameView({
     const chosen = cands[winnerIdx];
 
     const calledSoFar: number[] = [];
+    let pauseBaseline = getPauseSignal();
+    let restarted = false;
     for (let i = 0; i < order.length; i++) {
       // Honor admin "Stop Calling" signal between balls.
       if (getStopSignal() > stopBaseline) break;
+      if (getRestartSignal() > restartBaseline) { restarted = true; break; }
+      // Honor admin "Pause" — block until Continue or Stop/Restart.
+      if (getPauseSignal() > pauseBaseline) {
+        while (true) {
+          await new Promise((r) => setTimeout(r, 250));
+          if (getStopSignal() > stopBaseline) break;
+          if (getRestartSignal() > restartBaseline) { restarted = true; break; }
+          if (getResumeSignal() > pauseBaseline) { pauseBaseline = getPauseSignal(); break; }
+        }
+        if (getStopSignal() > stopBaseline) break;
+        if (restarted) break;
+      }
       const n = order[i];
       setCurrentBall(n);
       setBallKey((k) => k + 1);
