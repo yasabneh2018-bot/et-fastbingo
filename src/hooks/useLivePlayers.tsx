@@ -9,7 +9,7 @@ export function useLivePlayers(): LivePlayer[] {
   useEffect(() => {
     const tick = () => setList(getLivePlayers());
     tick();
-    const id = window.setInterval(tick, 2000);
+    const id = window.setInterval(tick, 1000);
     const onStorage = (e: StorageEvent) => {
       if (!e.key || e.key === "fk_live_players") tick();
     };
