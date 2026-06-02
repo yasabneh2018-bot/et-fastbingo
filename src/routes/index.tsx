@@ -1098,7 +1098,7 @@ function GameView({
   };
 
   // ---- Stake selection lobby (forced before entering the game) ----
-  if (!stakeChosen) {
+  if (!stakeChosen && !spectator) {
     const stakeColor = (s: number) =>
       s === 10 ? "from-cyan-400 to-cyan-600"
       : s === 20 ? "from-amber-400 to-orange-500"
