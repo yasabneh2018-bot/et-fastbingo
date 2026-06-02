@@ -834,12 +834,12 @@ function GameView({
     const beat = () =>
       heartbeatPresence({
         username: user.username,
-        stake: stakeChosen ? bet : 0,
+        stake: bet,
         joined: stakeChosen,
         gameNo: status.gameNo,
       });
     beat();
-    const id = window.setInterval(beat, 3000);
+    const id = window.setInterval(beat, 1500);
     const onLeave = () => removePresence(user.username);
     window.addEventListener("beforeunload", onLeave);
     return () => {
