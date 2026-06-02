@@ -1018,6 +1018,27 @@ function GameView({
 
     const finalDrawn = calledSoFar.slice();
 
+    if (restarted) {
+      // Admin restarted mid-draw: refund the user's stake and start a fresh round.
+      if (ticket) {
+        const u3 = getCurrentUser();
+        if (u3) updateUser({ ...u3, balance: u3.balance + ticket.bet });
+        toast.message(`Round restarted · refunded ${ticket.bet} ETB`);
+      }
+      setCurrentBall(null);
+      setDrawn([]);
+      setDaubedManual(new Set([12]));
+      setCartella(Array(25).fill(0));
+      setCartellaId(null);
+      lockedTicketRef.current = null;
+      setLocked(false);
+      setStakeChosen(false);
+      setStatus((s) => ({ countdown: 25, drawing: false, drawnCount: 0, gameNo: s.gameNo + 1 }));
+      runningRef.current = false;
+      onChange();
+      return;
+    }
+
     if (ticket) {
       const userDaubed = daubedSet(ticket.cartella, finalDrawn);
       const userWon = checkWin(pattern, userDaubed);
