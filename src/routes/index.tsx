@@ -1006,7 +1006,7 @@ function GameView({
       // Real bingo prize: total pool from all players × bet, minus house cut.
       // Winner takes the entire net pool.
       const totalPool = players.reduce((s, p) => s + p.bet, 0) + ticket.bet;
-      const netPool = Math.floor(totalPool * (1 - HOUSE_CUT));
+      const netPool = Math.floor(totalPool * POOL_PERCENT);
       const payout = userWon ? netPool : 0;
       const u2 = getCurrentUser();
       if (u2) {
