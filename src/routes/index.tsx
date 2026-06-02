@@ -1144,10 +1144,19 @@ function GameView({
             );
           })}
         </div>
-        <div className="flex justify-center">
+        <div className="flex flex-col sm:flex-row gap-2 justify-center items-stretch">
+          <button
+            onClick={() => { setSpectator(true); toast.message("Watching as spectator · no balance deducted"); }}
+            className="group relative overflow-hidden px-5 py-3 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
+            <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition" />
+            <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+            <span className="relative">Enter Room · Watch Only</span>
+            <span className="relative text-[10px] opacity-80 px-1.5 py-0.5 rounded bg-white/15 border border-white/20">FREE</span>
+          </button>
           <button
             onClick={() => setShowInfo(true)}
-            className="px-4 py-2 rounded-lg bg-card border border-border text-sm text-foreground flex items-center gap-2 hover:bg-accent transition"
+            className="px-4 py-2 rounded-xl bg-card border border-border text-sm text-foreground flex items-center justify-center gap-2 hover:bg-accent transition"
           >
             <span>ℹ️</span><span className="font-semibold">Game Information</span>
           </button>
