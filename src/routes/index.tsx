@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import casinoArtwork from "@/assets/auth-casino.jpg";
 import { toast } from "sonner";
 import {
   getUsers,
@@ -84,7 +86,17 @@ import {
 
 export const BOT_USERNAME = (import.meta.env.VITE_BOT_USERNAME as string) || "ETfastbingo_bot";
 
-export const Route = createFileRoute("/")({ component: App });
+export const Route = createFileRoute("/")({
+  component: App,
+  head: () => ({ meta: [
+    { title: "Fast Bingo — Live Bingo Room" },
+    { name: "description", content: "Join Fast Bingo, choose your cartella and follow the live bingo draw." },
+    { property: "og:title", content: "Fast Bingo — Live Bingo Room" },
+    { property: "og:description", content: "Choose your cartella and follow the live draw with Fast Bingo." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
+});
 
 
 // Payout multipliers per pick count -> per hit count
@@ -104,7 +116,7 @@ const payoutFor = (picks: number, hits: number) => PAYOUTS[picks]?.[hits] ?? 0;
 const maxMult = (picks: number) =>
   Math.max(0, ...Object.values(PAYOUTS[picks] ?? {}));
 
-const COLORS = ['#16a34a', '#171717', '#dc2626', '#facc15', '#2563eb']; // Green, Black, Red, Yellow, Blue
+const COLORS = ['var(--ball-mint)', 'var(--ball-violet)', 'var(--ball-pink)', 'var(--ball-gold)', 'var(--ball-cyan)'];
 const ROW_STARTS = [0, 2, 4, 1, 4, 0, 2, 4, 1];
 const ballColor = (n: number) => {
   const row = Math.floor((n - 1) / 10);
@@ -615,42 +627,48 @@ function AuthScreen({ onAuth, t, lang, setLang }: { onAuth: () => void; t: (k: K
 
 
   return (
-    <div className="h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-6">
+    <div className="auth-casino min-h-screen text-foreground">
       <Toaster theme="dark" position="top-center" />
-      <button onClick={() => setLang(lang === "am" ? "en" : "am")} className="absolute top-4 right-4 text-xs px-2 py-1 rounded border text-muted-foreground">
-        {lang === "am" ? "EN" : "አማ"}
-      </button>
-      <img src={logo} alt="Fast Bingo" className="h-16 w-auto mb-6" />
-      {mode === "register" && (
-        <div className="text-xs text-primary mb-3 font-semibold">🎁 {t("bonus20")}</div>
-      )}
-      {tgUser && (
-        <div className="text-xs text-muted-foreground mb-3">👋 {tgUser.first_name ?? "Player"}</div>
-      )}
-      <form onSubmit={submit} className="w-full max-w-xs space-y-3">
-        <div className="flex gap-2">
-          <input className="flex-1 bg-card border rounded-md px-3 py-2 text-sm" placeholder={t("phone")} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <img src={casinoArtwork} alt="Glossy bingo balls and ruby dice" className="auth-artwork" width={1536} height={1024} />
+      <header className="auth-topbar">
+        <div className="flex items-center gap-3"><img src={logo} alt="" className="h-9 w-auto" /><span className="font-black text-lg">FAST BINGO</span></div>
+        <Button variant="outline" size="sm" onClick={() => setLang(lang === "am" ? "en" : "am")}><Languages />{lang === "am" ? "EN" : "አማ"}</Button>
+      </header>
+      <main className="auth-layout">
+        <div className="auth-brand"><span className="auth-eyebrow"><Ticket size={14} /> BINGO CLUB</span><h1>FAST<br />BINGO<span className="auth-title-dot">.</span></h1></div>
+        <section className="auth-form-section">
+          <div className="auth-mode-tabs" role="tablist" aria-label="Account">
+            <Button variant="ghost" role="tab" aria-selected={mode === "login"} onClick={() => setMode("login")} className={mode === "login" ? "auth-tab active" : "auth-tab"}>{t("login")}</Button>
+            <Button variant="ghost" role="tab" aria-selected={mode === "register"} onClick={() => setMode("register")} className={mode === "register" ? "auth-tab active" : "auth-tab"}>{t("register")}</Button>
+          </div>
+          <div className="mb-7 mt-8"><div className="auth-eyebrow mb-3"><Crown size={14} /> FAST BINGO</div><h2 className="text-3xl font-bold">{mode === "login" ? t("welcome") : t("register")}</h2></div>
+          {mode === "register" && <div className="auth-bonus mb-5"><Gift size={20} /><span>{t("bonus20")}</span></div>}
+          {tgUser && <div className="text-sm text-muted-foreground mb-3">{tgUser.first_name ?? "Player"}</div>}
+      <form onSubmit={submit} className="space-y-5">
+        <div><label htmlFor="auth-phone" className="auth-label">{t("phone")}</label><div className="flex gap-2">
+          <input id="auth-phone" autoComplete="tel" className="auth-input min-w-0 flex-1" placeholder={t("phone")} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           {mode === "register" && (
-            <button type="button" onClick={requestContact} title="Share contact" className="px-2 bg-secondary border rounded-md text-primary">
+            <Button type="button" variant="outline" size="icon" onClick={requestContact} title="Share contact" aria-label="Share contact" className="h-12">
               <Phone size={16} />
-            </button>
+            </Button>
           )}
-        </div>
-        <div className="relative">
-          <input className="w-full bg-card border rounded-md px-3 py-2 pr-10 text-sm" placeholder={t("password")} type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+        </div></div>
+        <div><label htmlFor="auth-password" className="auth-label">{t("password")}</label><div className="relative">
+          <input id="auth-password" autoComplete={mode === "login" ? "current-password" : "new-password"} className="auth-input w-full pr-12" placeholder={t("password")} type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Button type="button" variant="ghost" size="icon" title={showPw ? "Hide password" : "Show password"} aria-label={showPw ? "Hide password" : "Show password"} onClick={() => setShowPw((s) => !s)} className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground">
             {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-        </div>
+          </Button>
+        </div></div>
         {mode === "register" && (
           <>
-            <input className="w-full bg-card border rounded-md px-3 py-2 text-sm disabled:opacity-60" placeholder={t("referral")} value={referral} onChange={(e) => setReferral(e.target.value)} disabled={refLocked} readOnly={refLocked} />
+            <div><label htmlFor="auth-referral" className="auth-label">{t("referral")}</label><input id="auth-referral" className="auth-input w-full disabled:opacity-60" placeholder={t("referral")} value={referral} onChange={(e) => setReferral(e.target.value)} disabled={refLocked} readOnly={refLocked} /></div>
             {refLocked && <div className="text-[10px] text-primary -mt-1">✓ Invited by {referral}</div>}
           </>
         )}
-        <button className="w-full bg-primary text-primary-foreground font-bold py-2.5 rounded-md">{mode === "login" ? t("login") : t("register")}</button>
-        <button type="button" onClick={() => setMode(mode === "login" ? "register" : "login")} className="w-full text-sm text-muted-foreground">{mode === "login" ? t("register") : t("login")}</button>
+        <Button type="submit" className="auth-submit w-full h-12 font-bold">{mode === "login" ? t("login") : t("register")}<Play size={16} /></Button>
       </form>
+      <div className="auth-footer"><ShieldCheck size={16} /><span>FAST BINGO</span><span className="ml-auto">ETB</span></div>
+      </section></main>
     </div>
   );
 }
@@ -1321,7 +1339,7 @@ function GameView({
           <div className="rings" />
 
           {/* Current ball big animated on top */}
-          <div className="relative flex items-center justify-center h-28">
+          <div className="ball-stage relative flex items-center justify-center h-28">
             {currentBall !== null && (
               <div key={ballKey} className="keno-ball big ball-pop flex-col leading-none relative z-10" style={ballStyle(currentBall)}>
                 <span className="text-[11px] opacity-90 font-black tracking-wider">{bingoLetter(currentBall)}</span>
@@ -1388,7 +1406,7 @@ function GameView({
           {/* Floating cartella overlay, draggable */}
           {lockedTicketRef.current && (
             <div
-              className="absolute z-40 left-2 top-2 w-[130px] rounded-md bg-white shadow-xl ring-2 ring-primary/60 p-1 touch-none select-none"
+              className="cartella-floating absolute z-40 left-2 top-2 w-[130px] rounded-md ring-2 ring-primary/60 p-1 touch-none select-none"
               style={{ transform: `translate(${cartOffset.x}px, ${cartOffset.y}px)`, willChange: "transform" }}
             >
               <button
@@ -1630,12 +1648,11 @@ function CartellaGrid({
 }: { cartella: number[]; daubed: Set<number>; onTap: (i: number) => void; small?: boolean; flush?: boolean }) {
   return (
     <div
-      className={flush ? "winner-card-flush" : "winner-card mx-auto"}
-      style={{ maxWidth: small ? 160 : 220 }}
+      className={`cartella-card ${flush ? "winner-card-flush" : "winner-card mx-auto"} ${small ? "cartella-small" : ""}`}
     >
       <div className="bingo-col-head">
         {(["B","I","N","G","O"] as const).map((L) => (
-          <div key={L} style={{ background: BINGO_COL_BG[L] }}>{L}</div>
+          <div key={L}>{L}</div>
         ))}
       </div>
       <div className="bingo-grid">
@@ -1643,13 +1660,15 @@ function CartellaGrid({
           const free = i === 12;
           const hit = free || daubed.has(i);
           return (
-            <button
+            <Button variant="ghost"
               key={i}
               onClick={() => onTap(i)}
+              aria-label={free ? "Free space" : `Number ${n}${hit ? ", marked" : ""}`}
+              aria-pressed={hit}
               className={`bingo-cell ${hit ? "hit" : ""} ${free ? "free" : ""}`}
             >
-              {free ? "★" : n || ""}
-            </button>
+              {hit ? <><span className="bingo-daub-star" aria-hidden="true">★</span><span className="bingo-cell-number">{free ? "★" : n || ""}</span></> : n || ""}
+            </Button>
           );
         })}
       </div>
