@@ -86,10 +86,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@FastBingo" },
       { name: "twitter:title", content: "Fast Bingo" },
       { name: "twitter:description", content: "Fast Bingo is a 5x5 online bingo game with customizable winning patterns." },
-      { property: "og:image", content: "/icon-512.png" },
-      { name: "twitter:image", content: "/icon-512.png" },
     ],
     links: [
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
