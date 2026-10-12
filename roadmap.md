@@ -1,0 +1,3 @@
+- [ ] Restyle existing login and signup with casino-inspired artwork and controls.
+- [ ] Restyle cartellas and ball entrance/exit with colorful glossy bingo visuals.
+- [ ] Verify screens and interactions; apply required package security update.
