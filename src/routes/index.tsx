@@ -1375,8 +1375,10 @@ function GameView({
             </div>
           </div>
 
-          {/* BINGO 75-ball board — 5 cols × 15 numbers */}
-          <div className="bingo-board">
+        </div>
+      )}
+
+      {winner ? null : revealing ? (
             {(["B","I","N","G","O"] as const).map((L, ci) => {
               const start = ci * 15 + 1;
               const nums = Array.from({ length: 15 }, (_, i) => start + i);
