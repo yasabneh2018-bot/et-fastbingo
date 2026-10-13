@@ -1378,32 +1378,6 @@ function GameView({
         </div>
       )}
 
-      {/* BINGO 75-ball board — below the cartella while calling */}
-      {status.drawing && (
-        <div className="bingo-board">
-          {(["B","I","N","G","O"] as const).map((L, ci) => {
-            const start = ci * 15 + 1;
-            const nums = Array.from({ length: 15 }, (_, i) => start + i);
-            return (
-              <div key={L} className="bingo-board-col">
-                {nums.map((n) => {
-                  const called = drawn.includes(n);
-                  const isCurrent = currentBall === n;
-                  return (
-                    <div
-                      key={n}
-                      className={`bingo-board-cell ${called ? "called" : ""} ${isCurrent ? "current" : ""}`}
-                    >
-                      {n}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {winner ? null : revealing ? (
         <div className={`bg-card border-2 rounded-lg p-2 space-y-2 ${revealing.won ? "border-primary pulse-glow" : "border-border"}`}>
           <div className={`text-center text-sm font-bold ${revealing.won ? "text-primary" : "text-muted-foreground"}`}>
