@@ -1333,8 +1333,8 @@ function GameView({
         );
       })()}
 
-      {/* DRAWING MODE */}
-      {status.drawing ? (
+      {/* DRAWING PANEL — shown above the cartella, same page flow */}
+      {status.drawing && (
         <div className="bg-card border rounded-lg p-2 relative overflow-visible flex flex-col gap-2">
           <div className="rings" />
 
@@ -1375,64 +1375,10 @@ function GameView({
             </div>
           </div>
 
-          {/* BINGO 75-ball board — 5 cols × 15 numbers */}
-          <div className="bingo-board">
-            {(["B","I","N","G","O"] as const).map((L, ci) => {
-              const start = ci * 15 + 1;
-              const nums = Array.from({ length: 15 }, (_, i) => start + i);
-              return (
-                <div key={L} className="bingo-board-col">
-                  {nums.map((n) => {
-                    const called = drawn.includes(n);
-                    const isCurrent = currentBall === n;
-                    return (
-                      <div
-                        key={n}
-                        className={`bingo-board-cell ${called ? "called" : ""} ${isCurrent ? "current" : ""}`}
-                      >
-                        {n}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-
-
-
-
-
-          {/* Floating cartella overlay, draggable */}
-          {lockedTicketRef.current && (
-            <div
-              className="cartella-floating absolute z-40 left-2 top-2 w-[130px] rounded-md ring-2 ring-primary/60 p-1 touch-none select-none"
-              style={{ transform: `translate(${cartOffset.x}px, ${cartOffset.y}px)`, willChange: "transform" }}
-            >
-              <button
-                type="button"
-                onPointerDown={onCartDragDown}
-                onPointerMove={onCartDragMove}
-                onPointerUp={onCartDragUp}
-                onPointerCancel={onCartDragUp}
-                className="absolute -top-2 -right-2 z-50 bg-primary text-primary-foreground rounded-full p-1 shadow cursor-grab active:cursor-grabbing"
-                title="Drag cartella"
-                aria-label="Drag cartella"
-              >
-                <Move size={12} />
-              </button>
-              <CartellaGrid
-                cartella={lockedTicketRef.current.cartella}
-                daubed={daubedSet(lockedTicketRef.current.cartella, drawn)}
-                onTap={() => {}}
-                small
-                flush
-              />
-            </div>
-          )}
-
         </div>
-      ) : winner ? null : revealing ? (
+      )}
+
+      {winner ? null : revealing ? (
         <div className={`bg-card border-2 rounded-lg p-2 space-y-2 ${revealing.won ? "border-primary pulse-glow" : "border-border"}`}>
           <div className={`text-center text-sm font-bold ${revealing.won ? "text-primary" : "text-muted-foreground"}`}>
             {revealing.won ? t("won") : t("lost")} · {pattern.label}
@@ -1449,9 +1395,11 @@ function GameView({
           </div>
         </div>
       ) : spectator ? (
-        <div className="bg-card border rounded-lg p-6 text-center text-sm text-muted-foreground">
-          You are watching this room. The next draw will appear here live.
-        </div>
+        status.drawing ? null : (
+          <div className="bg-card border rounded-lg p-6 text-center text-sm text-muted-foreground">
+            You are watching this room. The next draw will appear here live.
+          </div>
+        )
       ) : (
         <>
           {/* Stats sidebar + Cartella */}
@@ -1562,7 +1510,31 @@ function GameView({
         </>
       )}
 
-
+      {/* BINGO 75-ball board — below the cartella while calling */}
+      {status.drawing && (
+        <div className="bingo-board">
+          {(["B","I","N","G","O"] as const).map((L, ci) => {
+            const start = ci * 15 + 1;
+            const nums = Array.from({ length: 15 }, (_, i) => start + i);
+            return (
+              <div key={L} className="bingo-board-col">
+                {nums.map((n) => {
+                  const called = drawn.includes(n);
+                  const isCurrent = currentBall === n;
+                  return (
+                    <div
+                      key={n}
+                      className={`bingo-board-cell ${called ? "called" : ""} ${isCurrent ? "current" : ""}`}
+                    >
+                      {n}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {winner && <BingoWinnerOverlay winner={winner} t={t} />}
     </div>
