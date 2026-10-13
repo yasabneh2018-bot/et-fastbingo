@@ -614,3 +614,40 @@
   .ball-pop, .pulse-glow, .bingo-board-cell.current { animation: none; }
   .keno-tile, .bingo-cell { transition: none; }
 }
+
+/* ===== Profile — casino dashboard style ===== */
+.pf { --pf-gold: oklch(0.82 0.16 80); --pf-red: oklch(0.6 0.22 20); --pf-cyan: oklch(0.72 0.13 220); color: var(--casino-foreground); }
+.pf-hero { position: relative; overflow: hidden; border-radius: 1.25rem; padding: 1rem 1rem 1.25rem; text-align: center;
+  background: radial-gradient(120% 80% at 20% 0%, oklch(0.45 0.2 20 / 0.55), transparent 60%), radial-gradient(100% 80% at 90% 10%, oklch(0.45 0.18 300 / 0.5), transparent 60%), linear-gradient(180deg, var(--casino-surface), var(--casino-background));
+  border: 1px solid var(--casino-border); box-shadow: var(--casino-shadow); }
+.pf-hero-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+.pf-vip { display: inline-flex; gap: .3rem; align-items: center; color: var(--pf-gold); }
+.pf-id { color: var(--casino-muted); }
+.pf-avatar { width: 64px; height: 64px; margin: .5rem auto .35rem; border-radius: 9999px; display: grid; place-items: center; color: var(--pf-gold);
+  background: linear-gradient(145deg, var(--casino-surface), var(--casino-background)); border: 2px solid var(--pf-gold); box-shadow: 0 0 18px oklch(0.82 0.16 80 / 0.45); }
+.pf-name { font-weight: 800; font-size: 1.1rem; }
+.pf-badge { margin: .75rem auto .9rem; width: 150px; padding: .5rem 0 .6rem; border-radius: 1.25rem;
+  background: linear-gradient(180deg, oklch(0.32 0.03 260 / 0.9), oklch(0.2 0.02 260 / 0.95)); border: 1px solid oklch(0.5 0.03 260 / 0.6); box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.12), var(--casino-shadow); }
+.pf-badge-label { font-size: 13px; font-weight: 700; }
+.pf-badge-num { font-size: 3.25rem; line-height: 1; font-weight: 900; background: linear-gradient(180deg, oklch(0.92 0.14 90), oklch(0.72 0.17 60)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pf-badge-lvl { font-size: 13px; font-weight: 900; color: var(--pf-gold); }
+.pf-track { position: relative; height: 26px; border-radius: 9999px; overflow: hidden; background: repeating-linear-gradient(135deg, oklch(0.25 0.01 260) 0 10px, oklch(0.2 0.01 260) 10px 20px); border: 1px solid var(--casino-border); }
+.pf-track-fill { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(135deg, var(--pf-red) 0 10px, oklch(0.5 0.2 15) 10px 20px); box-shadow: inset 0 -9px 0 var(--pf-cyan); }
+.pf-track-mark { position: absolute; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 6px; background: oklch(0.15 0.01 260 / 0.85); }
+.pf-menu { border-radius: 1.25rem; padding: .5rem; display: grid; gap: .45rem; background: var(--casino-surface); border: 1px solid var(--casino-border); }
+.pf-row { display: flex; align-items: center; gap: .7rem; padding: .7rem .8rem; border-radius: .9rem; background: linear-gradient(180deg, oklch(0.27 0.015 260), oklch(0.22 0.012 260)); border: 1px solid oklch(0.36 0.02 260 / 0.6); }
+.pf-row:first-child { background: linear-gradient(180deg, oklch(0.42 0.06 240), oklch(0.3 0.05 240)); }
+.pf-row-label { flex: 1; font-weight: 700; font-size: 14px; }
+.pf-row-val { font-size: 12px; color: var(--casino-muted); font-weight: 700; }
+.pf-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; color: oklch(0.15 0.01 260); }
+.pf-gold { background: linear-gradient(145deg, oklch(0.9 0.14 90), oklch(0.72 0.17 60)); }
+.pf-mint { background: linear-gradient(145deg, oklch(0.85 0.15 160), oklch(0.6 0.15 160)); }
+.pf-pink { background: linear-gradient(145deg, oklch(0.75 0.2 10), oklch(0.55 0.22 20)); color: oklch(0.98 0 0); }
+.pf-violet { background: linear-gradient(145deg, oklch(0.7 0.18 300), oklch(0.5 0.2 290)); color: oklch(0.98 0 0); }
+.pf-cyan { background: linear-gradient(145deg, oklch(0.8 0.12 220), oklch(0.55 0.15 240)); color: oklch(0.98 0 0); }
+.pf-wallet { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; padding: .7rem; border-radius: 1.25rem; background: var(--casino-surface); border: 1px solid var(--casino-border); }
+.pf-coin { display: flex; align-items: center; gap: .55rem; }
+.pf-coin-val { font-weight: 900; font-size: 15px; }
+.pf-coin-lbl { font-size: 10px; color: var(--casino-muted); font-weight: 700; }
+.pf-cta { color: oklch(0.18 0.02 60); background: linear-gradient(180deg, oklch(0.88 0.16 85), oklch(0.72 0.18 55)); box-shadow: 0 8px 22px oklch(0.75 0.17 65 / 0.35); }
+.pf-cta:hover { filter: brightness(1.05); }

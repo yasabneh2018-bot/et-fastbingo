@@ -2892,41 +2892,63 @@ function MeView({ user, t }: { user: User; t: (k: Key) => string }) {
     setDeferred(null);
   };
 
+  const games = user.games ?? 0;
+  const wins = user.wins ?? 0;
+  const level = Math.max(1, Math.floor(games / 5) + 1);
+  const progress = Math.min(100, ((games % 5) / 5) * 100 + (games > 0 && games % 5 === 0 ? 0 : 0));
+  const menu = [
+    { icon: <UserIcon size={16} />, label: "User info", tone: "gold", value: user.username },
+    { icon: <Wallet size={16} />, label: "Wallet", tone: "mint", value: `${playBalance.toFixed(2)} ETB` },
+    { icon: <Gift size={16} />, label: "Bonuses", tone: "pink", value: `${SIGNUP_BONUS} ETB` },
+    { icon: <Ticket size={16} />, label: t("myTickets"), tone: "violet", value: String(games) },
+    { icon: <Trophy size={16} />, label: t("myWins"), tone: "gold", value: String(wins) },
+    { icon: <ShieldCheck size={16} />, label: "Safety", tone: "cyan", value: user.phone || "—" },
+  ];
+
   return (
-    <div className="space-y-3">
-      <div className="bg-card border rounded-lg p-5 text-center">
-        <div className="w-16 h-16 rounded-full bg-primary/20 mx-auto flex items-center justify-center mb-2">
-          <UserIcon size={32} className="text-primary" />
+    <div className="pf space-y-3">
+      <div className="pf-hero">
+        <div className="pf-hero-top">
+          <span className="pf-vip"><Crown size={14} /> VIP · PROGRAM</span>
+          <span className="pf-id">ID {userId}</span>
         </div>
-        <div className="font-bold text-lg">{user.username}</div>
-        <div className="text-[11px] text-muted-foreground mt-1">
-          ID: <span className="text-foreground font-semibold">{userId}</span>
+        <div className="pf-avatar"><UserIcon size={30} /></div>
+        <div className="pf-name">{user.username}</div>
+        <div className="pf-badge">
+          <div className="pf-badge-label">Battle Pass</div>
+          <div className="pf-badge-num">{level}</div>
+          <div className="pf-badge-lvl">LVL</div>
         </div>
-        {user.phone && <div className="text-xs text-muted-foreground mt-0.5">{user.phone}</div>}
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-card border rounded-md p-3 text-center">
-          <div className="text-xs text-muted-foreground">Withdrawable</div>
-          <div className="text-xl font-bold text-primary">{withdrawable.toFixed(2)}</div>
-          <div className="text-[10px] text-muted-foreground">ETB</div>
-        </div>
-        <div className="bg-card border rounded-md p-3 text-center">
-          <div className="text-xs text-muted-foreground">Balance for play</div>
-          <div className="text-xl font-bold text-primary">{playBalance.toFixed(2)}</div>
-          <div className="text-[10px] text-muted-foreground">ETB</div>
-        </div>
-        <div className="bg-card border rounded-md p-3 text-center">
-          <div className="text-xs text-muted-foreground">{t("myTickets")}</div>
-          <div className="text-xl font-bold">{user.games ?? 0}</div>
-        </div>
-        <div className="bg-card border rounded-md p-3 text-center">
-          <div className="text-xs text-muted-foreground">{t("myWins")}</div>
-          <div className="text-xl font-bold text-primary">{user.wins ?? 0}</div>
+        <div className="pf-track">
+          <div className="pf-track-fill" style={{ width: `${Math.max(6, progress)}%` }} />
+          <span className="pf-track-mark" style={{ left: "0%" }}>0</span>
+          <span className="pf-track-mark" style={{ left: "50%" }}>{level * 5 - 2}</span>
+          <span className="pf-track-mark" style={{ left: "94%" }}>{level * 5}</span>
         </div>
       </div>
-      <button onClick={install} disabled={installed} className="play-btn w-full py-3.5 rounded-md font-bold text-base flex items-center justify-center gap-2 disabled:opacity-70">
+
+      <div className="pf-menu">
+        {menu.map((m) => (
+          <div key={m.label} className="pf-row">
+            <span className={`pf-ico pf-${m.tone}`}>{m.icon}</span>
+            <span className="pf-row-label">{m.label}</span>
+            <span className="pf-row-val">{m.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="pf-wallet">
+        <div className="pf-coin"><span className="pf-ico pf-gold"><DollarSign size={16} /></span>
+          <div><div className="pf-coin-val">{withdrawable.toFixed(2)}</div><div className="pf-coin-lbl">Withdrawable ETB</div></div>
+        </div>
+        <div className="pf-coin"><span className="pf-ico pf-mint"><Wallet size={16} /></span>
+          <div><div className="pf-coin-val">{playBalance.toFixed(2)}</div><div className="pf-coin-lbl">Play ETB</div></div>
+        </div>
+      </div>
+
+      <Button onClick={install} disabled={installed} className="pf-cta w-full h-12 rounded-full text-base font-extrabold">
         <Download size={18} /> {installed ? t("installed") : t("install")}
-      </button>
+      </Button>
     </div>
   );
 }
