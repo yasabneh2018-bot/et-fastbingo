@@ -1333,8 +1333,8 @@ function GameView({
         );
       })()}
 
-      {/* DRAWING MODE */}
-      {status.drawing ? (
+      {/* DRAWING PANEL — shown above the cartella, same page flow */}
+      {status.drawing && (
         <div className="bg-card border rounded-lg p-2 relative overflow-visible flex flex-col gap-2">
           <div className="rings" />
 
@@ -1403,36 +1403,10 @@ function GameView({
 
 
 
-          {/* Floating cartella overlay, draggable */}
-          {lockedTicketRef.current && (
-            <div
-              className="cartella-floating absolute z-40 left-2 top-2 w-[130px] rounded-md ring-2 ring-primary/60 p-1 touch-none select-none"
-              style={{ transform: `translate(${cartOffset.x}px, ${cartOffset.y}px)`, willChange: "transform" }}
-            >
-              <button
-                type="button"
-                onPointerDown={onCartDragDown}
-                onPointerMove={onCartDragMove}
-                onPointerUp={onCartDragUp}
-                onPointerCancel={onCartDragUp}
-                className="absolute -top-2 -right-2 z-50 bg-primary text-primary-foreground rounded-full p-1 shadow cursor-grab active:cursor-grabbing"
-                title="Drag cartella"
-                aria-label="Drag cartella"
-              >
-                <Move size={12} />
-              </button>
-              <CartellaGrid
-                cartella={lockedTicketRef.current.cartella}
-                daubed={daubedSet(lockedTicketRef.current.cartella, drawn)}
-                onTap={() => {}}
-                small
-                flush
-              />
-            </div>
-          )}
-
         </div>
-      ) : winner ? null : revealing ? (
+      )}
+
+      {winner ? null : revealing ? (
         <div className={`bg-card border-2 rounded-lg p-2 space-y-2 ${revealing.won ? "border-primary pulse-glow" : "border-border"}`}>
           <div className={`text-center text-sm font-bold ${revealing.won ? "text-primary" : "text-muted-foreground"}`}>
             {revealing.won ? t("won") : t("lost")} · {pattern.label}
