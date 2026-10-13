@@ -1378,33 +1378,29 @@ function GameView({
         </div>
       )}
 
-      {winner ? null : revealing ? (
-            {(["B","I","N","G","O"] as const).map((L, ci) => {
-              const start = ci * 15 + 1;
-              const nums = Array.from({ length: 15 }, (_, i) => start + i);
-              return (
-                <div key={L} className="bingo-board-col">
-                  {nums.map((n) => {
-                    const called = drawn.includes(n);
-                    const isCurrent = currentBall === n;
-                    return (
-                      <div
-                        key={n}
-                        className={`bingo-board-cell ${called ? "called" : ""} ${isCurrent ? "current" : ""}`}
-                      >
-                        {n}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-
-
-
-
-
+      {/* BINGO 75-ball board — below the cartella while calling */}
+      {status.drawing && (
+        <div className="bingo-board">
+          {(["B","I","N","G","O"] as const).map((L, ci) => {
+            const start = ci * 15 + 1;
+            const nums = Array.from({ length: 15 }, (_, i) => start + i);
+            return (
+              <div key={L} className="bingo-board-col">
+                {nums.map((n) => {
+                  const called = drawn.includes(n);
+                  const isCurrent = currentBall === n;
+                  return (
+                    <div
+                      key={n}
+                      className={`bingo-board-cell ${called ? "called" : ""} ${isCurrent ? "current" : ""}`}
+                    >
+                      {n}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1425,9 +1421,11 @@ function GameView({
           </div>
         </div>
       ) : spectator ? (
-        <div className="bg-card border rounded-lg p-6 text-center text-sm text-muted-foreground">
-          You are watching this room. The next draw will appear here live.
-        </div>
+        status.drawing ? null : (
+          <div className="bg-card border rounded-lg p-6 text-center text-sm text-muted-foreground">
+            You are watching this room. The next draw will appear here live.
+          </div>
+        )
       ) : (
         <>
           {/* Stats sidebar + Cartella */}
