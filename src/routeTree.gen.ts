@@ -10,14 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiPublicNotifyRouteImport } from './routes/api.public.notify'
 import { Route as ApiPublicManifestRouteImport } from './routes/api.public.manifest'
-import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
+import { Route as ApiPublicNotifyRouteImport } from './routes/api.public.notify'
 import { Route as ApiPublicTelegramSetupRouteImport } from './routes/api.public.telegram.setup'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api.public.telegram.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicManifestRoute = ApiPublicManifestRouteImport.update({
+  id: '/api/public/manifest',
+  path: '/api/public/manifest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicNotifyRoute = ApiPublicNotifyRouteImport.update({
@@ -25,9 +30,9 @@ const ApiPublicNotifyRoute = ApiPublicNotifyRouteImport.update({
   path: '/api/public/notify',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicManifestRoute = ApiPublicManifestRouteImport.update({
-  id: '/api/public/manifest',
-  path: '/api/public/manifest',
+const ApiPublicTelegramSetupRoute = ApiPublicTelegramSetupRouteImport.update({
+  id: '/api/public/telegram/setup',
+  path: '/api/public/telegram/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicTelegramWebhookRoute =
@@ -36,11 +41,6 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicTelegramSetupRoute = ApiPublicTelegramSetupRouteImport.update({
-  id: '/api/public/telegram/setup',
-  path: '/api/public/telegram/setup',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -105,13 +105,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/notify': {
-      id: '/api/public/notify'
-      path: '/api/public/notify'
-      fullPath: '/api/public/notify'
-      preLoaderRoute: typeof ApiPublicNotifyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/manifest': {
       id: '/api/public/manifest'
       path: '/api/public/manifest'
@@ -119,11 +112,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicManifestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/telegram/webhook': {
-      id: '/api/public/telegram/webhook'
-      path: '/api/public/telegram/webhook'
-      fullPath: '/api/public/telegram/webhook'
-      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+    '/api/public/notify': {
+      id: '/api/public/notify'
+      path: '/api/public/notify'
+      fullPath: '/api/public/notify'
+      preLoaderRoute: typeof ApiPublicNotifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/telegram/setup': {
@@ -131,6 +124,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/telegram/setup'
       fullPath: '/api/public/telegram/setup'
       preLoaderRoute: typeof ApiPublicTelegramSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
