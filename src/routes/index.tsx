@@ -41,6 +41,10 @@ import {
   type Coupon,
   heartbeatPresence,
   removePresence,
+  initCloud,
+  onStoreChange,
+  signInWithPhone,
+  signUpWithPhone,
 } from "@/lib/store";
 import { useLivePlayers } from "@/hooks/useLivePlayers";
 import {
@@ -251,84 +255,39 @@ function App() {
       }
     } catch {/* ignore */}
 
-    // Auto-login or stash for AuthScreen
-    if (urlTg?.id) {
-      const users = getUsers();
-      const existing = users.find((u) => (u as any).telegramId === urlTg!.id);
-      if (existing) {
-        setSession(existing.username);
-        // Tell the user via the bot what their balance is
-        notifyTelegram({
-          chatId: urlTg.id,
-          text:
-            `👋 Welcome back <b>${existing.username}</b>!\n` +
-            `💰 Current balance: <b>${fmtEtb(existing.balance)}</b>`,
-        });
-      } else if (urlPhone) {
-        // Auto-register on first open (Telegram-verified phone)
-        const seq = Math.max(0, ...users.map((u) => u.seq ?? 0)) + 1;
-        const ref = sessionStorage.getItem("fk_ref") || undefined;
-        let referredBy: string | undefined;
-        if (ref) {
-          const inv = users.find((u) => u.username === ref || (u as any).refCode === ref);
-          if (inv) { inv.balance += REFERRAL_SIGNUP_BONUS; referredBy = inv.username; }
-        }
-        const uname = urlTg.username || `tg${urlTg.id}`;
-        const newUser: any = {
-          username: uname,
-          password: `tg_${urlTg.id}`,
-          phone: urlPhone,
-          balance: SIGNUP_BONUS,
-          seq, games: 0, wins: 0, referredBy,
-          firstDepositDone: false,
-          refCode: `R${urlPhone.slice(-6)}${Math.floor(Math.random() * 75 + 10)}`,
-          telegramId: urlTg.id,
-        };
-        users.push(newUser);
-        saveUsers(users);
-        setSession(uname);
-        // Record bonus tx for signup (+ inviter referral) so it shows in Top-up
-        addTx({
-          id: `b${Date.now()}s`, username: uname, type: "bonus", subtype: "signup",
-          amount: SIGNUP_BONUS, status: "approved", createdAt: Date.now(),
-          note: "Welcome bonus",
-        });
-        if (referredBy) {
-          addTx({
-            id: `b${Date.now()}r`, username: referredBy, type: "bonus", subtype: "referral",
-            amount: REFERRAL_SIGNUP_BONUS, status: "approved", createdAt: Date.now(),
-            note: `Invited ${uname}`,
+    const tgFromUrl = urlTg;
+    let alive = true;
+    (async () => {
+      await initCloud();
+      // Telegram auto-login / auto-register (bot sends verified phone)
+      if (!getCurrentUser() && tgFromUrl?.id && urlPhone) {
+        const pw = `tg_${tgFromUrl.id}`;
+        const res = await signInWithPhone(urlPhone, pw);
+        if (res.ok) {
+          const me = getCurrentUser();
+          if (me) notifyTelegram({ chatId: tgFromUrl.id, text: `👋 Welcome back <b>${me.username}</b>!\n💰 Current balance: <b>${fmtEtb(me.balance)}</b>` });
+        } else {
+          const uname = tgFromUrl.username || `tg${tgFromUrl.id}`;
+          const reg = await signUpWithPhone({
+            phone: urlPhone, password: pw, username: uname, telegramId: tgFromUrl.id,
+            refCode: `R${urlPhone.slice(-6)}${Math.floor(Math.random() * 75 + 10)}`,
+            referral: sessionStorage.getItem("fk_ref") || undefined,
           });
+          if (reg.ok) {
+            addTx({ id: `b${Date.now()}s`, username: uname, type: "bonus", subtype: "signup", amount: SIGNUP_BONUS, status: "approved", createdAt: Date.now(), note: "Welcome bonus" });
+            if (reg.referredBy) addTx({ id: `b${Date.now()}r`, username: reg.referredBy, type: "bonus", subtype: "referral", amount: REFERRAL_SIGNUP_BONUS, status: "approved", createdAt: Date.now(), note: `Invited ${uname}` });
+            notifyTelegram({
+              chatId: tgFromUrl.id,
+              text: `🎉 Welcome to <b>Fast Bingo</b>, ${tgFromUrl.first_name ?? uname}!\n🎁 +${SIGNUP_BONUS} ETB welcome bonus added.\n💰 Current balance: <b>${fmtEtb(SIGNUP_BONUS)}</b>`,
+              adminText: `🆕 New signup: <b>${uname}</b> · ${urlPhone} · tg:${tgFromUrl.id}`,
+            });
+          }
         }
-        notifyTelegram({
-          chatId: urlTg.id,
-          text:
-            `🎉 Welcome to <b>Adey Bingo</b>, ${urlTg.first_name ?? uname}!\n` +
-            `🎁 +${SIGNUP_BONUS} ETB welcome bonus added.\n` +
-            `💰 Current balance: <b>${fmtEtb(SIGNUP_BONUS)}</b>`,
-          adminText: `🆕 New signup: <b>${uname}</b> · ${urlPhone} · tg:${urlTg.id}`,
-        });
-      } else {
-        try { sessionStorage.setItem("fk_tg", JSON.stringify(urlTg)); } catch {}
+      } else if (!getCurrentUser() && tgFromUrl?.id) {
+        try { sessionStorage.setItem("fk_tg", JSON.stringify(tgFromUrl)); } catch {}
       }
-    }
-
-    let current = getCurrentUser();
-    if (!current) {
-      const users = getUsers();
-      current = users.find((u) => u.username === "player") ?? {
-        username: "player",
-        password: "",
-        balance: 1000,
-        seq: 1,
-        games: 0,
-        wins: 0,
-        firstDepositDone: true,
-      };
-      if (!users.some((u) => u.username === current!.username)) saveUsers([...users, current]);
-      setSession(current.username);
-    }
-    setUser(current);
+      if (alive) { setUser(getCurrentUser()); setSplash(false); }
+    })();
     // Honor ?view= deep-link from the bot (wallet / deposit / withdraw / redeem)
     try {
       const v = sessionStorage.getItem("fk_tg_view");
@@ -338,9 +297,11 @@ function App() {
         else if (v === "redeem") setView("home");
       }
     } catch {/* ignore */}
-    const id = setTimeout(() => setSplash(false), 1200);
-    return () => clearTimeout(id);
+    return () => { alive = false; };
   }, []);
+
+  // Re-render whenever shared data changes (other players, admin, other devices)
+  useEffect(() => onStoreChange(() => { setUser(getCurrentUser()); setTick((x) => x + 1); }), []);
 
 
   const refresh = () => {
@@ -567,62 +528,32 @@ function AuthScreen({ onAuth, t, lang, setLang }: { onAuth: () => void; t: (k: K
 
   const genRefCode = (phone: string) => `R${phone.slice(-6)}${Math.floor(Math.random() * 75 + 10)}`;
 
-  const submit = (e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone || phone.replace(/\D/g, "").length < 9) return toast.error("Phone required");
-    const users = getUsers();
-    // Auto-login: if phone is already registered, log them in regardless of mode
-    const existing = users.find((u) => u.phone === phone);
-    if (existing) {
-      // Admin must always verify with password; everyone else gets auto-login
-      if (existing.isAdmin) {
-        if (!password || password !== existing.password) return toast.error("Wrong admin password");
+    if (!password || password.length < 6) return toast.error("Password must be at least 6 characters");
+    setBusy(true);
+    try {
+      if (mode === "login") {
+        const res = await signInWithPhone(phone, password);
+        if (!res.ok) return toast.error("Wrong phone or password");
+        toast.success(`${t("welcome")} ${getCurrentUser()?.username ?? ""}`);
+      } else {
+        const username = tgUser?.username || `user${phone.replace(/\D/g, "").slice(-4)}${Math.floor(Math.random() * 900 + 100)}`;
+        const res = await signUpWithPhone({ phone, password, username, refCode: genRefCode(phone), referral, telegramId: tgUser?.id });
+        if (!res.ok) {
+          return toast.error(/registered|exists/i.test(res.msg) ? "Phone already registered — please log in" : res.msg);
+        }
+        addTx({ id: `b${Date.now()}s`, username, type: "bonus", subtype: "signup", amount: SIGNUP_BONUS, status: "approved", createdAt: Date.now(), note: "Welcome bonus" });
+        if (res.referredBy) addTx({ id: `b${Date.now()}r`, username: res.referredBy, type: "bonus", subtype: "referral", amount: REFERRAL_SIGNUP_BONUS, status: "approved", createdAt: Date.now(), note: `Invited ${username}` });
+        toast.success(`${t("welcome")} +${SIGNUP_BONUS} ETB`);
       }
-      setSession(existing.username);
-      toast.success(`${t("welcome")} ${existing.username}`);
       try { sessionStorage.removeItem("fk_tg"); sessionStorage.removeItem("fk_ref"); } catch {}
       onAuth();
-      return;
+    } finally {
+      setBusy(false);
     }
-    if (mode === "login") {
-      return toast.error("Not registered — please register first");
-    }
-    if (!password) return toast.error("Password required");
-    const seq = Math.max(0, ...users.map((u) => u.seq ?? 0)) + 1;
-    let referredBy: string | undefined;
-    if (referral.trim()) {
-      const code = referral.trim();
-      const inv = users.find((u) => u.username === code || (u as any).refCode === code);
-      if (inv) {
-        inv.balance += REFERRAL_SIGNUP_BONUS;
-        referredBy = inv.username;
-      }
-    }
-    const username = tgUser?.username || `user${phone.slice(-4)}${seq}`;
-    const newUser: any = {
-      username, password, phone, balance: SIGNUP_BONUS, seq,
-      games: 0, wins: 0, referredBy, firstDepositDone: false,
-      refCode: genRefCode(phone),
-      telegramId: tgUser?.id,
-    };
-    users.push(newUser);
-    saveUsers(users);
-    setSession(username);
-    addTx({
-      id: `b${Date.now()}s`, username, type: "bonus", subtype: "signup",
-      amount: SIGNUP_BONUS, status: "approved", createdAt: Date.now(),
-      note: "Welcome bonus",
-    });
-    if (referredBy) {
-      addTx({
-        id: `b${Date.now()}r`, username: referredBy, type: "bonus", subtype: "referral",
-        amount: REFERRAL_SIGNUP_BONUS, status: "approved", createdAt: Date.now(),
-        note: `Invited ${username}`,
-      });
-    }
-    try { sessionStorage.removeItem("fk_tg"); sessionStorage.removeItem("fk_ref"); } catch {}
-    toast.success(`${t("welcome")} +${SIGNUP_BONUS} ETB`);
-    onAuth();
   };
 
 
@@ -665,7 +596,7 @@ function AuthScreen({ onAuth, t, lang, setLang }: { onAuth: () => void; t: (k: K
             {refLocked && <div className="text-[10px] text-primary -mt-1">✓ Invited by {referral}</div>}
           </>
         )}
-        <Button type="submit" className="auth-submit w-full h-12 font-bold">{mode === "login" ? t("login") : t("register")}<Play size={16} /></Button>
+        <Button type="submit" disabled={busy} className="auth-submit w-full h-12 font-bold">{mode === "login" ? t("login") : t("register")}<Play size={16} /></Button>
       </form>
       <div className="auth-footer"><ShieldCheck size={16} /><span>FAST BINGO</span><span className="ml-auto">ETB</span></div>
       </section></main>

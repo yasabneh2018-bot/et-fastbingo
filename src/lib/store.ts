@@ -220,7 +220,6 @@ export async function signOutCloud() {
 }
 
 export const ADMIN_PHONE = "0941815119";
-export const ADMIN_PASSWORD = "14141312";
 export function getUsers(): User[] {
   return Array.from(profiles.values()).sort((a, b) => a.seq - b.seq).map(rowToUser);
 }
