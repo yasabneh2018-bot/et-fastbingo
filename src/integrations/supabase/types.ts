@@ -14,16 +14,139 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_kv: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Relationships: []
+      }
+      presence: {
+        Row: {
+          at: number
+          game_no: number
+          joined: boolean
+          stake: number
+          user_id: string
+          username: string
+        }
+        Insert: {
+          at: number
+          game_no?: number
+          joined?: boolean
+          stake?: number
+          user_id: string
+          username: string
+        }
+        Update: {
+          at?: number
+          game_no?: number
+          joined?: boolean
+          stake?: number
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          balance: number
+          created_at: string
+          first_deposit_done: boolean
+          games: number
+          id: string
+          is_admin: boolean
+          phone: string | null
+          ref_code: string | null
+          referred_by: string | null
+          seq: number
+          telegram_id: number | null
+          updated_at: string
+          username: string
+          wins: number
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          first_deposit_done?: boolean
+          games?: number
+          id: string
+          is_admin?: boolean
+          phone?: string | null
+          ref_code?: string | null
+          referred_by?: string | null
+          seq?: number
+          telegram_id?: number | null
+          updated_at?: string
+          username: string
+          wins?: number
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          first_deposit_done?: boolean
+          games?: number
+          id?: string
+          is_admin?: boolean
+          phone?: string | null
+          ref_code?: string | null
+          referred_by?: string | null
+          seq?: number
+          telegram_id?: number | null
+          updated_at?: string
+          username?: string
+          wins?: number
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      credit_referrer: {
+        Args: { _amount: number; _ref: string }
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +273,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

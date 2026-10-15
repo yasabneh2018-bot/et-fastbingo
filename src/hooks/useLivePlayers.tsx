@@ -1,23 +1,15 @@
 import { useEffect, useState } from "react";
-import { getLivePlayers, type LivePlayer } from "@/lib/store";
+import { getLivePlayers, onStoreChange, type LivePlayer } from "@/lib/store";
 
-/** Reactive list of live players. Polls every 2s and reacts to cross-tab storage events. */
+/** Reactive list of live players, shared through Lovable Cloud in real time. */
 export function useLivePlayers(): LivePlayer[] {
-  const [list, setList] = useState<LivePlayer[]>(() =>
-    typeof window === "undefined" ? [] : getLivePlayers(),
-  );
+  const [list, setList] = useState<LivePlayer[]>([]);
   useEffect(() => {
     const tick = () => setList(getLivePlayers());
     tick();
-    const id = window.setInterval(tick, 1000);
-    const onStorage = (e: StorageEvent) => {
-      if (!e.key || e.key === "fk_live_players") tick();
-    };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("storage", onStorage);
-    };
+    const id = window.setInterval(tick, 1000); // drop stale players after TTL
+    const off = onStoreChange(tick);
+    return () => { window.clearInterval(id); off(); };
   }, []);
   return list;
 }
